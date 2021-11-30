@@ -1,5 +1,7 @@
 package com.ssafy.commb.service;
 
+import com.ssafy.commb.dao.FeedDao;
+import com.ssafy.commb.dto.fcm.FcmDto;
 import com.ssafy.commb.exception.ApplicationException;
 import com.ssafy.commb.model.Comment;
 import com.ssafy.commb.model.CommentThumb;
@@ -13,7 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import javax.swing.text.html.Option;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 public class CommentServiceImpl implements CommentService {
@@ -30,7 +35,10 @@ public class CommentServiceImpl implements CommentService {
     @Autowired
     private CommentThumbRepository commentThumbRepository;
 
-    public void uploadComment(int feedId, int userId, String content) {
+    @Autowired
+    private FeedDao feedDao;
+
+    public int uploadComment(int feedId, int userId, String content) {
         Comment comment = new Comment();
 
         Optional<Feed> feed = feedRepository.findById(feedId);
@@ -40,7 +48,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setUser(user.get());
         comment.setContent(content);
 
-        commentRepository.save(comment);
+        return commentRepository.save(comment).getId();
     }
 
     public void modifyComment(int commentId, String content, int feedId) {
@@ -100,20 +108,54 @@ public class CommentServiceImpl implements CommentService {
     public void deleteLikeComment(int feedId, int commentId, int userId){
 
         Optional<Feed> feed = feedRepository.findById(feedId);
-        Optional<Comment> comment = commentRepository.findById(commentId);
-        Optional<User> user = userRepository.findById(userId);
-
         if (!feed.isPresent()) throw new ApplicationException(HttpStatus.valueOf(400), "존재하지 않는 피드입니다!");
 
+        Optional<Comment> comment = commentRepository.findById(commentId);
         if (!comment.isPresent()) throw new ApplicationException(HttpStatus.valueOf(400), "존재하지 않는 댓글입니다!");
 
+        Optional<User> user = userRepository.findById(userId);
         if (comment.get().getFeed().getId() != feedId) throw new ApplicationException(HttpStatus.valueOf(400), "해당 피드에 존재하지 않는 댓글입니다!");
 
         Optional<CommentThumb> commentThumb = commentThumbRepository.findByCommentAndUser(comment.get(), user.get());
-
         if(!commentThumb.isPresent()) throw new ApplicationException(HttpStatus.valueOf(404), "좋아요를 누른 댓글이 아닙니다!");
 
         commentThumbRepository.delete(commentThumb.get());
+    }
+
+    @Override
+    public List<FcmDto> getFeedWritersFirebaseToken(int feedId, int userId, String content, int commentId) {
+        List<FcmDto> fcms = new ArrayList<>();
+
+        List<String> tokens = feedDao.getFeedWriterToken(feedId);
+        Optional<User> user = userRepository.findById(userId);
+        Optional<Feed> feed = feedRepository.findById(feedId);
+
+        for(String token : tokens) {
+            FcmDto fcm = FcmDto.builder()
+                    .message(FcmDto.Message.builder().token(token)
+                            .notification(FcmDto.Notification.builder()
+                                    .title("comment")
+                                    .body(content)
+                                    .build())
+                            .data(FcmDto.PayData.builder()
+                                    .feedId(feedId)
+                                    .feedFileUrl(feed.get().getFileUrl())
+                                    .userId(userId)
+                                    .nickname(user.get().getNickname())
+                                    .userFileUrl(user.get().getFileUrl())
+                                    .comment(content)
+                                    .commentId(commentId)
+                                    .createAt(LocalDateTime.now(ZoneId.of("+9")))
+                                    .targetUserId(feed.get().getUser().getId())
+                                    .isRead(0)
+                                    .build())
+                            .build())
+                    .build();
+
+            fcms.add(fcm);
+        }
+
+        return fcms;
     }
 
     public Boolean isExist(Comment comment, User user){

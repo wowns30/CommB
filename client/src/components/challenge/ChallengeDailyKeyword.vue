@@ -1,31 +1,36 @@
 <template>
   <div class="daily-keyword">
     <div v-if="dailyKeyword" class="d-flex flex-column align-items-center">
-      <div class="keyword my-3">#{{ dailyKeyword.word }}</div>
+      <div class="keyword my-3" @click="searchTag(dailyKeyword.word)">#{{ dailyKeyword.word }}</div>
       <div class="des1">#<strong>{{ dailyKeyword.word }}</strong>에 대한 글을 남겨보세요!</div>
       <div class="des2 mt-1">
         <strong>{{ dailyKeyword.word }}</strong> 하면 떠오르는 책이나 책 속의 문장,<br>
-        그 무엇이든 좋아요 : - )
+        그 무엇이든 좋아요 : - ) <br/>
+        <br/>
+        오늘, 게시물에 <strong>#{{ dailyKeyword.word }}</strong>라는 태그를 남기면<br/>
+        Daily Challenge에 참여할 수 있습니다!
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import moment from 'moment'
-import { mapState, mapActions } from 'vuex'
+import { mapState } from 'vuex'
 
 export default {
   name: 'ChallengeDailyKeyword',
-  methods: {
-    ...mapActions('challenge', ['getDailyKeyword']),
-  },
   computed: {
     ...mapState('challenge', ['dailyKeyword']),
   },
-  created () {
-    this.getDailyKeyword(moment().format('YYYY-MM-DD'))
-  },
+  methods: {
+    searchTag (keyword) {
+      this.$router.push({ 
+        name: 'Search', 
+        params: { flag: 'feeds' },
+        query: { q: keyword }  
+      })
+    }
+  }
 }
 </script>
 
@@ -41,6 +46,10 @@ export default {
     text-align: center;
     vertical-align: middle;
     box-shadow: 5px 5px 5px 3px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+  .keyword:hover {
+    font-size: 25px;
   }
   .des1 {
     font-size: 15px;

@@ -2,6 +2,7 @@ package com.ssafy.commb.model;
 
 import com.ssafy.commb.dto.book.KeywordDto;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class Keyword {
 
     @Id
@@ -31,6 +33,7 @@ public class Keyword {
 
     @ManyToMany(mappedBy = "keywords", fetch = FetchType.LAZY)
     private List<Book> books = new ArrayList<>();
+
 
     public KeywordDto convertKeywordDto(){
         return KeywordDto.builder()

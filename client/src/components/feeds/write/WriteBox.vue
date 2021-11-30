@@ -3,10 +3,9 @@
     <div class="book-info d-flex flex-column justify-content-center">
       <img  class="book-cover" :src="bookInfo.bookFileUrl" alt="">
       <div class="title">{{ bookInfo.bookName }}</div>
-      <div class="subtitle mt-1">{{ bookInfo.author }} | {{ bookInfo.publisher }}</div>
+      <div class="subtitle mt-1">{{ author }} | {{ bookInfo.publisher }}</div>
       <i 
         class="fi-rr-picture add-photo-btn"
-        type="button"
         data-bs-toggle="modal" 
         data-bs-target="#imageCropModal"
       ></i>
@@ -14,7 +13,7 @@
     <textarea 
       class="form-control content-input mt-2" 
       type="text" 
-      placeholder="Content"
+      :placeholder="bookInfo.bookName + '에 대한 글을 작성해주세요!'"
       @input="insertContent"
       :value="content"
     ></textarea>
@@ -23,10 +22,19 @@
       class="image-preview" 
       :src="preview" 
       alt="">
+    <div v-if="!preview" class="image-position d-flex justify-content-center align-items-center">
+      <i 
+        class="fi-sr-add add-photo"
+        data-bs-toggle="modal" 
+        data-bs-target="#imageCropModal"
+      ></i>
+    </div>
+    <span v-if="!preview" class="notice-text"><strong>사진을 추가</strong>해야 <strong>글쓰기를 완료</strong>할 수 있습니다. 게시글에 어울리는 사진을 선택해주세요!</span>
   </div>
 </template>
 
 <script>
+import _ from 'lodash'
 import { mapState } from 'vuex'
 
 export default {
@@ -36,7 +44,8 @@ export default {
   },
   data () {
     return {
-      content: ''
+      content: '',
+      placeholder: "this.bookInfo.bookName + '글을 작성해주세요!'"
     }
   },
   methods: {
@@ -46,7 +55,14 @@ export default {
     }
   },
   computed: {
-    ...mapState('book', ['bookInfo'])
+    ...mapState('book', ['bookInfo']),
+    author () {
+      const authors = _.split(this.bookInfo.author, ',')
+      if (authors.length > 1) {
+        return authors[0] + ` 외 ${authors.length - 1}명`
+      }
+      return this.bookInfo.author
+    }
   },
 }
 </script>
@@ -97,6 +113,13 @@ export default {
     right: 10px;
     bottom: 3px;
     font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .add-photo {
+    margin-top: 5px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #C4C4C4;
   }
   .write-box .image-preview {
     position: absolute;
@@ -105,6 +128,25 @@ export default {
     border-radius: 10px;
     width: 50px;
     height: auto;
+  }
+  .write-box .image-position {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    border-radius: 10px;
+    width: 50px;
+    height: 50px;
+    border: #F1F1F1 dashed 3px;
+    text-align: center;
+  }
+  .notice-text {
+    position: absolute;
+    left: 60px;
+    bottom: 10px;
+    width: 210px;
+    padding-left: 10px;
+    color: #7540EE;
+    font-size: 0.75rem;
   }
   .content-input {
     background: none;
@@ -119,8 +161,10 @@ export default {
     padding: 1rem;
     height: 200px;
     word-wrap: break-word;
+    resize: none;
   }
   .content-input::-webkit-scrollbar {
     display: none;
   }
+  
 </style>

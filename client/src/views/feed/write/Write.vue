@@ -52,6 +52,7 @@ export default {
     saveImage (croppa) {
       this.preview = croppa.generateDataUrl('image/jpeg')
       this.myCroppa = croppa
+      this.makeFormData()
     },
     insertContent (content) {
       this.content = content
@@ -68,11 +69,9 @@ export default {
     async onPostFeed () {
       this.makeFormData()
       await feedApi.postFeed(this.feedFD)
-        .then((res) => {
-          console.log(res)
-        })
-        .catch((err) => {
-          console.log(err)
+        .then(() => {
+          // console.log(res)
+          this.$router.push({ name: 'Feed'})
         })
     },
     cancelWrite () {
