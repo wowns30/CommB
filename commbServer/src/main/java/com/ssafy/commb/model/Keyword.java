@@ -34,10 +34,6 @@ public class Keyword {
     @ManyToMany(mappedBy = "keywords", fetch = FetchType.LAZY)
     private List<Book> books = new ArrayList<>();
 
-    public Keyword(int id, String keyword) {
-        this.id = id;
-        this.keyword = keyword;
-    }
 
     public KeywordDto convertKeywordDto(){
         return KeywordDto.builder()
